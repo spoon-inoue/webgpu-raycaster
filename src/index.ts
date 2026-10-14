@@ -1,14 +1,11 @@
+import { addIntersectLineMesh, addIntersectPointMesh, addModelMesh } from './meshBuilder'
 import { createResizeObserver } from './modules/common/resize'
-import { GPU, Timer, Uniform } from './modules/core'
-import { Quaternion } from './modules/core/Quaternion'
-import { PlaneGeometry } from './modules/geometry'
-import { LineGeometry } from './modules/geometry/LineGeometry'
+import { GPU, Timer } from './modules/core'
 import { GLBLoader } from './modules/loader/GLBLoader'
-import { GLBGeometry, GLBGroup, Mesh, Scene } from './modules/objects'
+import { Scene } from './modules/objects'
 import { OrbitControls, PerspectiveCamera } from './modules/objects/camera'
 import { PointerRay, Raycaster } from './modules/raycaster'
 import { CanvasRenderTarget, DepthRenderTarget, MSAARenderTarget, RenderPassAttachments } from './modules/renderTarget'
-import * as shader from './shader'
 
 // ===========================================
 // gpu
@@ -69,158 +66,11 @@ scene.bindGroups = [
 ]
 
 // ===========================================
-// model
+// mesh
 // ===========================================
-{
-  const geometry = new GLBGeometry(device, bunnyNode.getMesh()!)
-  const mesh = new Mesh(geometry)
-  mesh.name = 'bunny'
-  const quat = new Quaternion(...bunnyNode.getRotation())
-  mesh.setTRS(bunnyNode.getTranslation(), quat.getEuler('XYZ'), bunnyNode.getScale())
-
-  const group = new GLBGroup(bunnyTransformNode)
-
-  scene.add(group)
-  group.add(mesh)
-
-  // uniform
-  const uniform = new Uniform(device, { shader: shader.modelVs, uniformName: 'model' })
-  mesh.setUniform('model', uniform)
-
-  // bind group
-  const bindGroupLayout = device.createBindGroupLayout({
-    entries: [{ binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { type: 'uniform', minBindingSize: uniform.buffer.size } }],
-  })
-
-  const bindGroup = device.createBindGroup({
-    layout: bindGroupLayout,
-    entries: [{ binding: 0, resource: uniform.buffer }],
-  })
-
-  mesh.bindGroups = [bindGroup]
-
-  // pipeline
-  mesh.pipeline = device.createRenderPipeline({
-    layout: device.createPipelineLayout({ bindGroupLayouts: [...scene.bindGroupLayouts, bindGroupLayout] }),
-    vertex: {
-      module: device.createShaderModule({ code: shader.modelVs }),
-      buffers: [mesh.geometry.vertexBufferLayout],
-    },
-    fragment: {
-      module: device.createShaderModule({ code: shader.modelFs }),
-      targets: [{ format: gpu.presentationFormat }],
-    },
-    multisample: { count: msaa.sampleCount },
-    depthStencil: {
-      depthWriteEnabled: true,
-      format: depth.format,
-      depthCompare: 'less',
-    },
-  })
-}
-
-const bunny = scene.getObjectByName('bunny') as Mesh
-
-// ===========================================
-// intersect point
-// ===========================================
-{
-  const geometry = new PlaneGeometry(device)
-  const mesh = new Mesh(geometry)
-  mesh.name = 'point'
-  mesh.visible = false
-  scene.add(mesh)
-
-  const uniform = new Uniform(device, { shader: shader.intersectPointVs, uniformName: 'point' })
-  uniform.set('scale', 1.5).writeBuffer()
-  mesh.setUniform('point', uniform)
-
-  const bindGroupLayout = device.createBindGroupLayout({
-    entries: [{ binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { type: 'uniform', minBindingSize: uniform.buffer.size } }],
-  })
-
-  const bindGroup = device.createBindGroup({
-    layout: bindGroupLayout,
-    entries: [{ binding: 0, resource: uniform.buffer }],
-  })
-  mesh.bindGroups = [bindGroup]
-
-  mesh.pipeline = device.createRenderPipeline({
-    layout: device.createPipelineLayout({ bindGroupLayouts: [...scene.bindGroupLayouts, bindGroupLayout] }),
-    vertex: {
-      module: device.createShaderModule({ code: shader.intersectPointVs }),
-      buffers: [mesh.geometry.vertexBufferLayout],
-    },
-    fragment: {
-      module: device.createShaderModule({ code: shader.intersectPointFs }),
-      targets: [
-        {
-          format: gpu.presentationFormat,
-          blend: {
-            color: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add' },
-            alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add' },
-          },
-        },
-      ],
-    },
-    multisample: { count: msaa.sampleCount },
-    depthStencil: {
-      depthWriteEnabled: false,
-      format: depth.format,
-      depthCompare: 'always',
-    },
-  })
-}
-
-const point = scene.getObjectByName('point') as Mesh
-
-// ===========================================
-// intersect normal line
-// ===========================================
-{
-  const geometry = new LineGeometry(device, { lines: [0, 0, 0, 0, 0, 0] })
-  const mesh = new Mesh(geometry)
-  mesh.name = 'line'
-  mesh.visible = false
-  scene.add(mesh)
-
-  const uniform = new Uniform(device, { shader: shader.intersectNormalVs, uniformName: 'line' })
-  uniform.set('normal', [1, 1, 1]).writeBuffer()
-  mesh.setUniform('line', uniform)
-
-  const bindGroupLayout = device.createBindGroupLayout({
-    entries: [{ binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { type: 'uniform', minBindingSize: uniform.buffer.size } }],
-  })
-
-  const bindGroup = device.createBindGroup({
-    layout: bindGroupLayout,
-    entries: [{ binding: 0, resource: uniform.buffer }],
-  })
-  mesh.bindGroups = [bindGroup]
-
-  mesh.pipeline = device.createRenderPipeline({
-    layout: device.createPipelineLayout({ bindGroupLayouts: [...scene.bindGroupLayouts, bindGroupLayout] }),
-    vertex: {
-      module: device.createShaderModule({ code: shader.intersectNormalVs }),
-      buffers: [mesh.geometry.vertexBufferLayout],
-    },
-    fragment: {
-      module: device.createShaderModule({ code: shader.intersectNormalFs }),
-      targets: [{ format: gpu.presentationFormat }],
-    },
-    primitive: {
-      topology: 'line-list',
-    },
-    multisample: { count: msaa.sampleCount },
-    depthStencil: {
-      depthWriteEnabled: false,
-      format: depth.format,
-      depthCompare: 'always',
-    },
-  })
-}
-
-const line = scene.getObjectByName('line') as Mesh
+const bunny = addModelMesh(gpu, scene, bunnyNode, bunnyTransformNode, msaa, depth)
+const point = addIntersectPointMesh(gpu, scene, msaa, depth)
+const line = addIntersectLineMesh(gpu, scene, msaa, depth)
 
 // ===========================================
 // raycaster
@@ -272,8 +122,8 @@ function render() {
   attachments.setView(renderTarget.texture)
 
   const encoder = device.createCommandEncoder()
-  const pass = encoder.beginRenderPass(attachments.descriptor)
 
+  const pass = encoder.beginRenderPass(attachments.descriptor)
   scene.setBindGroup(pass, 0)
   bunny.draw(pass, 1)
   point.draw(pass, 1)
