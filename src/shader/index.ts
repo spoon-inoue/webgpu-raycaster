@@ -1,0 +1,6 @@
+export { default as modelVs } from './model.vs.wgsl?raw'
+export { default as modelFs } from './model.fs.wgsl?raw'
+export { default as intersectPointVs } from './intersect-point.vs.wgsl?raw'
+export { default as intersectPointFs } from './intersect-point.fs.wgsl?raw'
+export { default as intersectNormalVs } from './intersect-normal.vs.wgsl?raw'
+export { default as intersectNormalFs } from './intersect-normal.fs.wgsl?raw'

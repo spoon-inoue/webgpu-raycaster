@@ -1,0 +1,5 @@
+export { GLBGeometry } from './GLBGeometry'
+export { GLBGroup } from './GLBGroup'
+export { Mesh } from './Mesh'
+export { Object3D } from './Object3D'
+export { Scene } from './Scene'
