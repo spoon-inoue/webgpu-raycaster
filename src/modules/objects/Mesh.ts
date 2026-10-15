@@ -1,4 +1,4 @@
-import { vec3, vec4, type Vec3 } from 'wgpu-matrix'
+import { vec3, vec4 } from 'wgpu-matrix'
 import type { Uniform } from '../core'
 import type { Geometry } from '../geometry/Geometry'
 import type { Camera } from './camera'
