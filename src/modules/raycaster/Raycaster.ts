@@ -32,6 +32,7 @@ export class Raycaster {
 
   intersect(target: Mesh): Intersection[] | null {
     if (!target.geometry.indices) return null
+    if (!target.visible) return null
 
     target.getRoot().updateWorldMatrix()
 

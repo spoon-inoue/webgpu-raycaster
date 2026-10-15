@@ -2,7 +2,7 @@ import { addIntersectLineMesh, addIntersectPointMesh, addModelMesh } from './mes
 import { createResizeObserver } from './modules/common/resize'
 import { GPU, Timer } from './modules/core'
 import { GLBLoader } from './modules/loader/GLBLoader'
-import { Scene } from './modules/objects'
+import { Mesh, Scene } from './modules/objects'
 import { OrbitControls, PerspectiveCamera } from './modules/objects/camera'
 import { PointerRay, Raycaster } from './modules/raycaster'
 import { CanvasRenderTarget, DepthRenderTarget, MSAARenderTarget, RenderPassAttachments } from './modules/renderTarget'
@@ -69,8 +69,12 @@ scene.bindGroups = [
 // mesh
 // ===========================================
 const bunny = addModelMesh(gpu, scene, bunnyNode, bunnyTransformNode, msaa, depth)
+
 const point = addIntersectPointMesh(gpu, scene, msaa, depth)
+point.frustumCulled = false
+
 const line = addIntersectLineMesh(gpu, scene, msaa, depth)
+line.frustumCulled = false
 
 // ===========================================
 // raycaster
@@ -113,6 +117,8 @@ function render() {
   controls.update(deltaTime)
 
   scene.updateWorldMatrix()
+  scene.frustumCulling(camera)
+
   // prettier-ignore
   bunny.getUniform('model')
     .set('worldMatrix', bunny.worldMatrix)
@@ -125,9 +131,11 @@ function render() {
 
   const pass = encoder.beginRenderPass(attachments.descriptor)
   scene.setBindGroup(pass, 0)
-  bunny.draw(pass, 1)
-  point.draw(pass, 1)
-  line.draw(pass, 1)
+  scene.traverse((obj) => {
+    if (obj instanceof Mesh) {
+      obj.draw(pass, 1)
+    }
+  })
   pass.end()
 
   device.queue.submit([encoder.finish()])

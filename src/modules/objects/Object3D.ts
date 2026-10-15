@@ -6,7 +6,7 @@ type N3 = [number, number, number]
 export abstract class Object3D {
   public name: string = ''
   public parent: Object3D | null = null
-  public visible = true
+  protected _visible = true
 
   public readonly children: Object3D[] = []
 
@@ -77,6 +77,14 @@ export abstract class Object3D {
     mat3.fromMat4(mat4.transpose(this.worldMatrixInverse), this.normalMatrix)
 
     this.children.forEach((child) => child.updateWorldMatrix())
+  }
+
+  get visible() {
+    return this._visible
+  }
+
+  set visible(visibled: boolean) {
+    this._visible = visibled
   }
 
   getRoot(): Object3D {
