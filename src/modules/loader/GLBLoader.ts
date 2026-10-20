@@ -20,7 +20,7 @@ export class GLBLoader {
 
   /**
    * using draco decoder
-   * @param version draco versition (e.g. '1.5.7')
+   * @param version draco version (e.g. '1.5.7')
    * @returns disposer
    */
   async setDraco(version?: string): Promise<Dispose> {
