@@ -30,7 +30,7 @@ const attachments = new RenderPassAttachments({
 // load mdoel
 // ===========================================
 const loader = new GLBLoader()
-const dispose = await loader.setDraco()
+const dispose = await loader.setDraco('1.5.7')
 const doc = await loader.load(import.meta.env.BASE_URL + 'assets/model.drc.glb')
 dispose()
 

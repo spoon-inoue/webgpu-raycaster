@@ -20,16 +20,25 @@ export class GLBLoader {
 
   /**
    * using draco decoder
+   * @param version draco versition (e.g. '1.5.7')
    * @returns disposer
    */
-  async setDraco(): Promise<Dispose> {
+  async setDraco(version?: string): Promise<Dispose> {
+    // 最新バージョン
+    let url = 'https://www.gstatic.com/draco/v1/decoders/'
+    if (version) {
+      // バージョン指定
+      url = `https://www.gstatic.com/draco/versioned/decoders/${version}/`
+    }
+
     this.dracoDecoderModule = await draco3d.createDecoderModule({
+      // ---
       // CDN
       // https://github.com/google/draco#wasm-and-javascript-decoders
-      locateFile: (path: string) => `https://www.gstatic.com/draco/v1/decoders/${path}`,
-      // local file
+      locateFile: (path: string) => url + path,
+      // ---
+      // DL
       // https://github.com/google/draco/blob/main/javascript/draco_decoder_gltf.wasm
-      // locateFile: (path: string) => `/draco/${path}`,
     })
     this.io.registerDependencies({ 'draco3d.decoder': this.dracoDecoderModule })
 
